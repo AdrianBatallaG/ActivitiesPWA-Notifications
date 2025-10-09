@@ -9,7 +9,6 @@ const urlsToCache = [
   '/icon-512x512.png'
 ];
 
-// Instalación y cache de recursos
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -20,7 +19,6 @@ self.addEventListener('install', event => {
   );
 });
 
-// Fetch con cache
 self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request)
@@ -35,7 +33,6 @@ self.addEventListener('fetch', event => {
   );
 });
 
-// Activación y limpieza de caches antiguos
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => Promise.all(
@@ -49,14 +46,12 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Recepción de push
 self.addEventListener('push', event => {
   let data = { title: 'Notificación', body: 'Mensaje recibido' };
 
   try {
-    data = event.data.json(); // Intenta parsear JSON
+    data = event.data.json();
   } catch (e) {
-    // Si falla, usa el texto simple
     data.body = event.data ? event.data.text() : data.body;
   }
 
@@ -71,7 +66,6 @@ self.addEventListener('push', event => {
   );
 });
 
-// Click en la notificación
 self.addEventListener('notificationclick', event => {
   event.notification.close();
   event.waitUntil(
@@ -83,3 +77,4 @@ self.addEventListener('notificationclick', event => {
     })
   );
 });
+
