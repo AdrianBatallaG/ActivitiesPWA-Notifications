@@ -1323,32 +1323,41 @@ if ('serviceWorker' in navigator) {
 
 const PUBLIC_VAPID_KEY = "BAAj8AYP6CPtIBm6M0-jFHSC9Yix3TmwRfT9QY_TlzUPHV_2vV3gl0TzI1XH90r0XCkSs8FY6hrnmN90aSinIoM";
 
-async function registerPush() {
-  if ("serviceWorker" in navigator) {
-    const registration = await navigator.serviceWorker.register("sw.js");
-
-    const subscription = await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY),
-    });
-
-    await fetch("/subscribe", {
-      method: "POST",
-      body: JSON.stringify(subscription),
-      headers: { "Content-Type": "application/json" },
-    });
-
-    console.log("Suscripción registrada");
-  }
-}
-
 function urlBase64ToUint8Array(base64String) {
-  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const padding = "=".repeat((4 - base64String.length % 4) % 4);
   const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
   const rawData = atob(base64);
   return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
 }
 
+async function registerPush() {
+  if ("serviceWorker" in navigator && "PushManager" in window) {
+    try {
+      const registration = await navigator.serviceWorker.register("/sw.js");
+      console.log("Service Worker registrado");
 
-registerPush();
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY),
+      });
 
+      const res = await fetch("/subscribe", {
+        method: "POST",
+        body: JSON.stringify(subscription),
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (res.ok) console.log("Suscripción registrada en el backend");
+      else console.error("Error registrando suscripción en backend:", res.status);
+      
+    } catch (err) {
+      console.error("Error en push notifications:", err);
+    }
+  } else {
+    console.warn("Push notifications no soportadas en este navegador");
+  }
+}
+
+window.addEventListener("load", () => {
+  registerPush();
+});
