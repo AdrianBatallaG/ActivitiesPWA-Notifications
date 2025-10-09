@@ -1325,7 +1325,7 @@ const PUBLIC_VAPID_KEY = "BAAj8AYP6CPtIBm6M0-jFHSC9Yix3TmwRfT9QY_TlzUPHV_2vV3gl0
 // Registrar el Service Worker y suscribirse a notificaciones
 async function registerPush() {
   if ("serviceWorker" in navigator) {
-    const registration = await navigator.serviceWorker.register("service-worker.js");
+    const registration = await navigator.serviceWorker.register("sw.js");
 
     const subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
@@ -1348,5 +1348,6 @@ function urlBase64ToUint8Array(base64String) {
   const rawData = atob(base64);
   return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
 }
+
 
 registerPush();
