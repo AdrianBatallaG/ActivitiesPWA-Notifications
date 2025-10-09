@@ -9,72 +9,47 @@ const urlsToCache = [
   '/icon-512x512.png'
 ];
 
-self.addEventListener('install', event => {
+self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('Cache abierto');
-        return cache.addAll(urlsToCache);
-      })
+    caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
   );
 });
 
-self.addEventListener('fetch', event => {
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then(keys => 
+      Promise.all(
+        keys.map(key => {
+          if (key !== CACHE_NAME) return caches.delete(key);
+        })
+      )
+    )
+  );
+});
+
+self.addEventListener('fetch', (event) => {
   event.respondWith(
-    caches.match(event.request)
-      .then(response => response || fetch(event.request).then(fetchResponse => {
-        if(!fetchResponse || fetchResponse.status !== 200 || fetchResponse.type !== 'basic') {
-          return fetchResponse;
-        }
-        const responseToCache = fetchResponse.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseToCache));
-        return fetchResponse;
-      }))
+    caches.match(event.request).then(response => response || fetch(event.request).then(fetchResponse => {
+      if(!fetchResponse || fetchResponse.status !== 200 || fetchResponse.type !== 'basic') return fetchResponse;
+      const responseToCache = fetchResponse.clone();
+      caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseToCache));
+      return fetchResponse;
+    }))
   );
 });
 
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(cacheNames => Promise.all(
-      cacheNames.map(cacheName => {
-        if (cacheName !== CACHE_NAME) {
-          console.log('Eliminando cache antiguo:', cacheName);
-          return caches.delete(cacheName);
-        }
-      })
-    ))
-  );
-});
-
-self.addEventListener('push', event => {
-  let data = { title: 'Notificación', body: 'Mensaje recibido' };
+self.addEventListener("push", (event) => {
+  let data = { title: "Notificación", body: "" };
 
   try {
-    data = event.data.json();
-  } catch (e) {
-    data.body = event.data ? event.data.text() : data.body;
+    data = event.data.json(); 
+  } catch (err) {
+    if(event.data) data.body = event.data.text();
   }
 
-  const options = {
+  self.registration.showNotification(data.title, {
     body: data.body,
-    icon: 'icon-192x192.png',
-    badge: 'icon-192x192.png'
-  };
-
-  event.waitUntil(
-    self.registration.showNotification(data.title, options)
-  );
-});
-
-self.addEventListener('notificationclick', event => {
-  event.notification.close();
-  event.waitUntil(
-    clients.matchAll({ type: 'window' }).then(clientList => {
-      for (const client of clientList) {
-        if ('focus' in client) return client.focus();
-      }
-      if (clients.openWindow) return clients.openWindow('/');
-    })
-  );
+    icon: "icon-192x192.png"
+  });
 });
 
