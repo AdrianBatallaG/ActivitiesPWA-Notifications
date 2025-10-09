@@ -30,7 +30,11 @@ app.post("/subscribe", (req, res) => {
 });
 
 app.post("/notify", async (req, res) => {
-  const payload = JSON.stringify({ title: "Notificación de prueba" });
+  const payload = JSON.stringify({
+    title: "Notificación de prueba",
+    body: "Hola esto es una prueba"
+  });
+
   try {
     await Promise.all(subscriptions.map(sub => webpush.sendNotification(sub, payload)));
     res.status(200).json({ message: "Notificaciones enviadas" });
@@ -41,5 +45,4 @@ app.post("/notify", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => console.log(`Servidor corriendo en el puerto ${PORT}`));
-
+app.listen(PORT, () => console.log(`Servidor corriendo en http://localhost:${PORT}`));
