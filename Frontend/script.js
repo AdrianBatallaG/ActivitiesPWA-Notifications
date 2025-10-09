@@ -329,9 +329,9 @@ async function loadActivities() {
             cardsContainer.innerHTML = `
                 <div class="empty-message">
                     <h3>No se encontraron actividades</h3>
-                    <p>Verifica que tu Google Sheets sea público y tenga datos.</p>
-                    <p><strong>Estructura esperada:</strong></p>
-                    <p>Columnas: Materia | Actividad | Fecha Apertura | Fecha Cierre | Descripción | Enlaces</p>
+                    <p>Verifica que tengas conexion a internet.</p>
+                    <p><strong>Si ese no es el caso, reportalo para que lo pueda arreglar pronto.</strong></p>
+                    <p>Si aun no lo arreglo es porque nunca me dijiste nada, que se supone que sea? Adivino tambien?... Tss...</p>
                 </div>
             `;
             return;
@@ -347,8 +347,9 @@ async function loadActivities() {
         cardsContainer.innerHTML = `
             <div class="error-message">
                 <h3>Error al cargar las actividades</h3>
-                <p><strong>Detalles:</strong> ${error.message}</p>
-                <p>Revisa la consola para más información.</p>
+                <p>Verifica que tengas conexion a internet.</p>
+                <p><strong>Si ese no es el caso reportalo para que lo pueda arreglar pronto.</strong></p>
+                <p>Si aun no lo arreglo es porque nunca me dijiste nada, que se supone que sea? Adivino tambien?... Tss...</p>
             </div>
         `;
         console.error('Error completo:', error);
@@ -539,9 +540,9 @@ async function openScheduleModal() {
             scheduleContent.innerHTML = `
                 <div class="no-schedule">
                     <h3>No se encontraron horarios</h3>
-                    <p>Verifica que la hoja "Horarios" exista y tenga datos.</p>
-                    <p><strong>Estructura esperada:</strong></p>
-                    <p>Materia | Días | Hora | Enlace | Nombre del Enlace</p>
+                    <p>Verifica que tengas conexion a internet.</p>
+                    <p><strong>Si ese no es el caso reportalo para que lo pueda arreglar pronto.</strong></p>
+                    <p>Si aun no lo arreglo es porque nunca me dijiste nada, que se supone que sea? Adivino tambien?... Tss...</p>
                 </div>
             `;
             return;
@@ -555,7 +556,7 @@ async function openScheduleModal() {
             <div class="error-message">
                 <h3>Error al cargar los horarios</h3>
                 <p><strong>Detalles:</strong> ${error.message}</p>
-                <p>Revisa que la hoja "Horarios" sea pública.</p>
+                <p>Lo arreglare pronto si me avisas...</p>
             </div>
         `;
     }
@@ -784,7 +785,7 @@ async function loadActivities() {
             cardsContainer.innerHTML = `
                 <div class="empty-message">
                     <h3>No se encontraron actividades</h3>
-                    <p>Verifica que tu Google Sheets sea público y tenga datos.</p>
+                    <p>Lo arreglare pronto si me avisas...</p>
                 </div>
             `;
             return;
@@ -1088,7 +1089,7 @@ function processAndDisplayActivities(activities) {
         cardsContainer.innerHTML = `
             <div class="empty-message">
                 <h3>No se encontraron actividades</h3>
-                <p>${navigator.onLine ? 'Verifica que tu Google Sheets sea público.' : 'No hay datos cacheados disponibles.'}</p>
+                <p>${navigator.onLine ? 'No hay datos cacheados disponibles.'}</p>
             </div>
         `;
         return;
@@ -1269,7 +1270,7 @@ function showInstallRejectedMessage() {
         animation: slideInRight 0.5s ease;
     `;
     message.innerHTML = `
-        <strong>💡 ¿Cambiaste de idea?</strong>
+        <strong>¿Cambiaste de idea?</strong>
         <p style="margin: 5px 0 0 0; font-size: 0.9rem;">
             Puedes instalar la app luego desde el menú de tu navegador
         </p>
@@ -1320,9 +1321,8 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-const PUBLIC_VAPID_KEY = "BAAj8AYP6CPtIBm6M0-jFHSC9Yix3TmwRfT9QY_TlzUPHV_2vV3gl0TzI1XH90r0XCkSs8FY6hrnmN90aSinIoM"; // la que está en webpush-keys.json
+const PUBLIC_VAPID_KEY = "BAAj8AYP6CPtIBm6M0-jFHSC9Yix3TmwRfT9QY_TlzUPHV_2vV3gl0TzI1XH90r0XCkSs8FY6hrnmN90aSinIoM";
 
-// Registrar el Service Worker y suscribirse a notificaciones
 async function registerPush() {
   if ("serviceWorker" in navigator) {
     const registration = await navigator.serviceWorker.register("sw.js");
@@ -1332,7 +1332,7 @@ async function registerPush() {
       applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY),
     });
 
-    await fetch("/subscribe", { // Nota: solo "/subscribe" porque frontend y backend están juntos
+    await fetch("/subscribe", {
       method: "POST",
       body: JSON.stringify(subscription),
       headers: { "Content-Type": "application/json" },
@@ -1351,3 +1351,4 @@ function urlBase64ToUint8Array(base64String) {
 
 
 registerPush();
+
