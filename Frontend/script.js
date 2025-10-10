@@ -826,7 +826,7 @@ function setupHoverMessages() {
     cards.forEach(card => {
         card.addEventListener('mouseenter', function() {
             clearTimeout(hideTimeout);
-            hoverMessage.textContent = 'Haz clic para ver los detalles completos de esta actividad';
+            hoverMessage.textContent = 'Haz clic o selecciona la tarjeta para ver los detalles completos de esta actividad';
             hoverMessage.classList.add('show');
         });
 
@@ -852,7 +852,7 @@ function setupHoverMessages() {
 function enhanceSubtitle() {
     const subtitle = document.querySelector('.subtitle');
     if (subtitle) {
-        subtitle.innerHTML = 'Pasa el cursor sobre cualquier tarjeta y haz clic para ver los detalles';
+        subtitle.innerHTML = 'Haz clic o selecciona cualquier tarjeta para ver los detalles';
         subtitle.style.cursor = 'default';
 
         subtitle.addEventListener('mouseenter', function() {
@@ -920,7 +920,7 @@ function urlBase64ToUint8Array(base64String) {
 
 async function sendSubscriptionToServer(subscription) {
     try {
-        const response = await fetch('/api/subscribe', {
+        const response = await fetch('/subscribe', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -1032,7 +1032,7 @@ function showInstallRejectedMessage() {
             z-index: 1000;
             animation: slideInRight 0.5s ease;
         ">
-            <strong>💡 ¿Cambiaste de idea?</strong>
+            <strong>¿Cambiaste de idea?</strong>
             <p style="margin: 5px 0 0 0; font-size: 0.9rem;">
                 Puedes instalar la app luego desde el menú de tu navegador
             </p>
@@ -1074,7 +1074,7 @@ async function loadActivities() {
 
         const cachedActivities = localStorage.getItem('cachedActivities');
         if (cachedActivities) {
-            console.log('📂 Cargando datos cacheados...');
+            console.log('Cargando datos cacheados...');
             processAndDisplayActivities(JSON.parse(cachedActivities));
         } else {
             showError(error);
@@ -1115,7 +1115,7 @@ function showOfflineMessage() {
     const cachedActivities = localStorage.getItem('cachedActivities');
     
     if (cachedActivities) {
-        console.log('📂 Modo offline - Cargando datos cacheados');
+        console.log('Modo offline - Cargando datos cacheados');
         processAndDisplayActivities(JSON.parse(cachedActivities));
 
         showOfflineBanner();
@@ -1361,3 +1361,4 @@ async function registerPush() {
 window.addEventListener("load", () => {
   registerPush();
 });
+
