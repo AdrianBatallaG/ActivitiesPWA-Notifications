@@ -1,3 +1,80 @@
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
+import { getMessaging, getToken, onMessage } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging.js';
+
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY", // Tu API Key para la Web App de Firebase
+    authDomain: "app-notifications-a1dcc.firebaseapp.com",
+    projectId: "app-notifications-a1dcc",
+    storageBucket: "app-notifications-a1dcc.appspot.com",
+    messagingSenderId: "264755819849", // Tu Project Number (está correcto)
+    appId: "YOUR_APP_ID" // El App ID de tu Web App de Firebase
+};
+
+const app = initializeApp(firebaseConfig);
+const messaging = getMessaging(app);
+
+async function requestPermissionAndGetToken() {
+    try {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+            console.log('FCM: Permiso de notificación concedido.');
+
+            // Obtiene el token de registro de FCM para este dispositivo/navegador
+            // REEMPLAZA 'YOUR_VAPID_KEY_FROM_FIREBASE_CONSOLE' con tu clave VAPID real.
+            // La encuentras en Firebase Console > Project settings > Cloud Messaging > Web configuration > Web push certificates.
+            const currentToken = await getToken(messaging, {
+                vapidKey: 'YOUR_VAPID_KEY_FROM_FIREBASE_CONSOLE'
+            });
+
+            if (currentToken) {
+                console.log('FCM: Token de registro obtenido:', currentToken);
+                // Envía el token a tu backend para almacenarlo
+                // REEMPLAZA 'https://your-backend-url.com/register-fcm-token' con la URL REAL de tu endpoint de backend.
+                sendTokenToBackend(currentToken);
+            } else {
+                console.warn('FCM: No se obtuvo el token de registro. Permiso denegado o error.');
+            }
+        } else {
+            console.warn('FCM: Permiso de notificación denegado.');
+        }
+    } catch (error) {
+        console.error('FCM: Error al obtener el token:', error);
+    }
+}
+
+// Función para enviar el token a tu backend
+async function sendTokenToBackend(token) {
+    try {
+        // Esta URL debe apuntar al endpoint de tu backend que espera el token
+        const response = await fetch('https://your-backend-url.com/register-fcm-token', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ token: token }),
+        });
+        if (response.ok) {
+            console.log('FCM: Token enviado al backend con éxito.');
+        } else {
+            console.error('FCM: Error al enviar el token al backend:', response.status, response.statusText);
+        }
+    } catch (error) {
+        console.error('FCM: Error de red al enviar el token al backend:', error);
+    }
+}
+
+// Manejar mensajes cuando la aplicación está en primer plano (visible por el usuario)
+onMessage(messaging, (payload) => {
+    console.log('FCM: Mensaje recibido en primer plano:', payload);
+    // Puedes mostrar una notificación visualmente en la UI o usar la API nativa
+    const notificationTitle = payload.notification.title || 'Nueva Notificación';
+    const notificationOptions = {
+        body: payload.notification.body || 'Tienes un mensaje nuevo.',
+        icon: '/icon-192x192.png' // Asegúrate de que esta ruta sea correcta para tu PWA
+    };
+    new Notification(notificationTitle, notificationOptions);
+});
+
 function flipCard(card) {
     card.classList.toggle('flipped');
 }
@@ -867,75 +944,6 @@ function enhanceSubtitle() {
     }
 }
 
-async function setupPushNotifications(registration) {
-    if (!('Notification' in window)) {
-        console.log('Este navegador no soporta notificaciones');
-        return;
-    }
-
-    if (Notification.permission === 'default') {
-        try {
-            const permission = await Notification.requestPermission();
-            if (permission === 'granted') {
-                console.log('Permiso para notificaciones concedido');
-                subscribeToPush(registration);
-            }
-        } catch (error) {
-            console.error('Error solicitando permiso:', error);
-        }
-    } else if (Notification.permission === 'granted') {
-        subscribeToPush(registration);
-    }
-}
-
-async function subscribeToPush(registration) {
-    try {
-        const subscription = await registration.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array('BLx1eQ3...')
-        });
-        
-        console.log('Suscrito a notificaciones push:', subscription);
-        await sendSubscriptionToServer(subscription);
-        
-    } catch (error) {
-        console.error('Error suscribiéndose a push:', error);
-    }
-}
-
-function urlBase64ToUint8Array(base64String) {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding)
-        .replace(/\-/g, '+')
-        .replace(/_/g, '/');
-
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
-
-    for (let i = 0; i < rawData.length; ++i) {
-        outputArray[i] = rawData.charCodeAt(i);
-    }
-    return outputArray;
-}
-
-async function sendSubscriptionToServer(subscription) {
-    try {
-        const response = await fetch('/subscribe', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(subscription)
-        });
-        
-        if (response.ok) {
-            console.log('Suscripción guardada en servidor');
-        }
-    } catch (error) {
-        console.error('Error enviando suscripción:', error);
-    }
-}
-
 function showLocalNotification(title, options = {}) {
     if (!('Notification' in window) || Notification.permission !== 'granted') {
         return;
@@ -948,42 +956,6 @@ function showLocalNotification(title, options = {}) {
     };
 
     new Notification(title, notificationOptions);
-}
-
-function setupConnectionMonitor() {
-    const connectionStatus = document.getElementById('connectionStatus');
-    
-    function updateConnectionStatus() {
-        if (navigator.onLine) {
-            connectionStatus.textContent = 'Conectado';
-            connectionStatus.style.color = '#2ecc71';
-        } else {
-            connectionStatus.textContent = 'Sin conexión - Modo offline';
-            connectionStatus.style.color = '#e74c3c';
-        }
-    }
-
-    window.addEventListener('online', updateConnectionStatus);
-    window.addEventListener('offline', updateConnectionStatus);
-    updateConnectionStatus();
-}
-
-function showPWAPromoBanner() {
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-        return; 
-    }
-    
-    const banner = document.getElementById('pwaPromoBanner');
-    if (banner) {
-        banner.classList.add('show');
-    }
-}
-
-function hidePWAPromoBanner() {
-    const banner = document.getElementById('pwaPromoBanner');
-    if (banner) {
-        banner.classList.remove('show');
-    }
 }
 
 function showInstallSuccessMessage() {
@@ -1311,17 +1283,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
+        navigator.serviceWorker.register('/firebase-messaging-sw.js') // REGISTRA EL SW DE FCM
             .then((registration) => {
-                console.log('Service Worker registrado con éxito:', registration);
+                console.log('FCM: Service Worker registrado con éxito:', registration);
             })
             .catch((error) => {
-                console.log('Error al registrar el Service Worker:', error);
+                console.error('FCM: Fallo el registro del Service Worker:', error);
             });
     });
 }
-
-const PUBLIC_VAPID_KEY = "BAAj8AYP6CPtIBm6M0-jFHSC9Yix3TmwRfT9QY_TlzUPHV_2vV3gl0TzI1XH90r0XCkSs8FY6hrnmN90aSinIoM";
 
 function urlBase64ToUint8Array(base64String) {
   const padding = "=".repeat((4 - base64String.length % 4) % 4);
@@ -1330,35 +1300,16 @@ function urlBase64ToUint8Array(base64String) {
   return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
 }
 
-async function registerPush() {
-  if ("serviceWorker" in navigator && "PushManager" in window) {
-    try {
-      const registration = await navigator.serviceWorker.register("/sw.js");
-      console.log("Service Worker registrado");
+document.addEventListener('DOMContentLoaded', function() {
+    setupConnectionMonitor(); // Esta función la mantienes.
+    loadActivities();         // Esta función la mantienes.
 
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY),
-      });
-
-      const res = await fetch("/subscribe", {
-        method: "POST",
-        body: JSON.stringify(subscription),
-        headers: { "Content-Type": "application/json" },
-      });
-
-      if (res.ok) console.log("Suscripción registrada en el backend");
-      else console.error("Error registrando suscripción en backend:", res.status);
-      
-    } catch (err) {
-      console.error("Error en push notifications:", err);
-    }
-  } else {
-    console.warn("Push notifications no soportadas en este navegador");
-  }
-}
+    // AÑADE ESTO para iniciar el proceso de FCM cuando la PWA carga
+    requestPermissionAndGetToken();
+});
 
 window.addEventListener("load", () => {
   registerPush();
 });
+
 
