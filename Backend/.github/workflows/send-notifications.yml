@@ -1,0 +1,29 @@
+name: Enviar recordatorios diarios
+
+on:
+  schedule:
+    - cron: '0 09 * * *' # Todos los días a las 13:00 UTC (ajusta tu hora)
+  workflow_dispatch: # Permite ejecutarlo manualmente
+
+jobs:
+  send-notifications:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout del código
+      uses: actions/checkout@v4
+
+    - name: Configurar Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+
+    - name: Instalar dependencias
+      run: npm install firebase-admin
+
+    - name: Enviar notificaciones FCM
+      env:
+        FIREBASE_CREDENTIALS: ${{ secrets.FIREBASE_CREDENTIALS }}
+      run: |
+        echo "$FIREBASE_CREDENTIALS" > serviceAccountKey.json
+        node sendNotifications.js
