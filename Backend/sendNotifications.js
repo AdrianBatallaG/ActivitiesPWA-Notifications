@@ -5,7 +5,7 @@ import fs from "fs";
 import { getTodayTasks } from "./sheets.js"; // Ajusta según tu función real
 
 // 1️⃣ Inicializar Firebase Admin con la clave descargada desde el secret
-const serviceAccount = JSON.parse(fs.readFileSync("serviceAccountKey.json"));
+const serviceAccount = JSON.parse(process.env.FIREBASE_CREDENTIALS_JSON);
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
